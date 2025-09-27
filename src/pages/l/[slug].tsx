@@ -1,4 +1,5 @@
 import { GetServerSideProps } from 'next';
+import { useEffect, useState } from 'react';
 import { createAdminClient } from '../../lib/supabaseAdmin';
 
 interface LinkData {
@@ -24,6 +25,26 @@ interface Props {
 }
 
 export default function PublicLinkPage({ link, error }: Props) {
+  const [visitId, setVisitId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (link?.id) {
+      // Log visit on initial client load
+      fetch('/api/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link_id: link.id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.id) {
+          setVisitId(data.id);
+        }
+      })
+      .catch(err => console.error('Failed to log visit:', err));
+    }
+  }, [link?.id]);
+
   if (error || !link) {
     return (
       <main style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
