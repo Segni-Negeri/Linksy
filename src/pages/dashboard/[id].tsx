@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../../hooks/useUser';
 import { Button } from '../../components/ui/Button';
+import { TaskList } from '../../components/TaskList';
 import { supabase } from '../../lib/supabaseClient';
 
 interface Link {
@@ -306,76 +307,19 @@ export default function LinkEditor({ linkId }: Props) {
 
         {/* Tasks Section */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2>Tasks ({link.tasks.length})</h2>
-            <Button variant="secondary" onClick={() => alert('Add task functionality coming soon!')}>
-              Add Task
-            </Button>
-          </div>
-
-          {link.tasks.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px', 
-              backgroundColor: '#f9fafb', 
-              borderRadius: '8px',
-              border: '2px dashed #d1d5db'
-            }}>
-              <p style={{ margin: '0 0 16px 0', color: '#6b7280' }}>
-                No tasks added yet.
-              </p>
-              <Button variant="secondary" onClick={() => alert('Add task functionality coming soon!')}>
-                Add Your First Task
-              </Button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {link.tasks.map((task) => (
-                <div 
-                  key={task.id}
-                  style={{
-                    padding: '16px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    backgroundColor: 'white'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
-                        {task.label}
-                      </h3>
-                      <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>
-                        Type: {task.type}
-                      </p>
-                      {task.target && (
-                        <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>
-                          Target: {task.target}
-                        </p>
-                      )}
-                      <p style={{ margin: '0', color: '#6b7280', fontSize: '14px' }}>
-                        Required: {task.required ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <Button 
-                        variant="secondary"
-                        onClick={() => alert('Edit task functionality coming soon!')}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="secondary"
-                        onClick={() => alert('Delete task functionality coming soon!')}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <TaskList 
+            linkId={linkId}
+            tasks={link.tasks}
+            onTaskAdded={(task) => setLink(prev => prev ? { ...prev, tasks: [...prev.tasks, task] } : null)}
+            onTaskUpdated={(updatedTask) => setLink(prev => prev ? { 
+              ...prev, 
+              tasks: prev.tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+            } : null)}
+            onTaskDeleted={(taskId) => setLink(prev => prev ? { 
+              ...prev, 
+              tasks: prev.tasks.filter(t => t.id !== taskId)
+            } : null)}
+          />
 
           <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
             <h3 style={{ margin: '0 0 12px 0' }}>Preview</h3>
