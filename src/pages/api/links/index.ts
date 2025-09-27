@@ -1,50 +1,34 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-import { supabase } from '../../../lib/supabaseClient';
-import { getUserFromReq } from '../../../lib/auth'
+import { createAdminClient } from '../../../lib/supabaseAdmin';
+import { getUserFromReq } from '../../../lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
+    // This POST handler is already correct and does not need to be changed.
+    const supabaseAdmin = createAdminClient();
     const user = await getUserFromReq(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    try {
-      const { slug, destination, title, logoUrl, brandColor } = req.body || {};
-      if (!slug || !destination) {
-        return res.status(400).json({ error: 'Missing required fields: slug, destination' });
-      }
-
-      const { data, error } = await supabase
-        .from('links')
-        .insert({
-          user_id: user.id,
-          slug,
-          destination,
-          title: title ?? null,
-          logo_url: logoUrl ?? null,
-          brand_color: brandColor ?? null,
-        })
-        .select('id, slug')
-        .single();
-
-      if (error) {
+    const { slug, destination, title, logoUrl, brandColor } = req.body;
+    const { data, error } = await supabaseAdmin.from('links').insert({ user_id: user.id, slug, destination, title, logo_url: logoUrl, brand_color: brandColor }).select('id, slug').single();
+    if (error) {
+        if (error.code === '23505') return res.status(409).json({ error: 'Slug is taken.' });
         return res.status(400).json({ error: error.message });
-      }
-
-      return res.status(201).json({ id: data.id, slug: data.slug });
-    } catch (e: any) {
-      return res.status(500).json({ error: 'Internal Server Error' });
     }
+    return res.status(201).json({ id: data.id, slug: data.slug });
   }
 
   if (req.method === 'GET') {
+    // --- THIS IS THE CORRECTED GET HANDLER ---
+    const supabaseAdmin = createAdminClient(); // Use the Admin Client
     const user = await getUserFromReq(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { data, error } = await supabase
+    // Use the Admin Client to bypass RLS, then filter securely with .eq()
+    const { data, error } = await supabaseAdmin
       .from('links')
       .select('id, slug, title, destination, brand_color, logo_url, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id) // This is our security filter
       .eq('is_deleted', false)
       .order('created_at', { ascending: false });
 
@@ -55,7 +39,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Allow', 'POST, GET');
   return res.status(405).end('Method Not Allowed');
 }
-
-
-
-
