@@ -139,11 +139,59 @@ export default function PublicLinkPage({ link, error }: Props) {
         )}
       </div>
 
-      <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
-        <p style={{ margin: 0, fontWeight: 'bold' }}>
-          Complete all required tasks to unlock the destination link.
-        </p>
-      </div>
+      {/* Check if all required tasks are completed */}
+      {(() => {
+        const requiredTasks = link.tasks.filter(task => task.required);
+        const completedRequiredTasks = requiredTasks.filter(task => completedTasks.has(task.id));
+        const allRequiredCompleted = requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
+        
+        if (allRequiredCompleted) {
+          return (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '24px', 
+              backgroundColor: '#d1fae5', 
+              borderRadius: '8px',
+              border: '2px solid #10b981'
+            }}>
+              <h2 style={{ color: '#065f46', margin: '0 0 16px 0' }}>🎉 All Tasks Completed!</h2>
+              <p style={{ margin: '0 0 20px 0', color: '#065f46' }}>
+                You've successfully completed all required tasks.
+              </p>
+              <a 
+                href={link.destination} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-block',
+                  padding: '12px 24px',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}
+              >
+                🔗 Visit Destination
+              </a>
+            </div>
+          );
+        }
+        
+        return (
+          <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontWeight: 'bold' }}>
+              Complete all required tasks to unlock the destination link.
+            </p>
+            {requiredTasks.length > 0 && (
+              <p style={{ margin: '8px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+                Progress: {completedRequiredTasks.length}/{requiredTasks.length} required tasks completed
+              </p>
+            )}
+          </div>
+        );
+      })()}
     </main>
   );
 }
