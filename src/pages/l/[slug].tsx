@@ -26,6 +26,7 @@ interface Props {
 
 export default function PublicLinkPage({ link, error }: Props) {
   const [visitId, setVisitId] = useState<string | null>(null);
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (link?.id) {
@@ -91,24 +92,46 @@ export default function PublicLinkPage({ link, error }: Props) {
                 <button 
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: link.brand_color || '#111827',
+                    backgroundColor: completedTasks.has(task.id) ? '#10b981' : (link.brand_color || '#111827'),
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
-                    cursor: 'pointer',
+                    cursor: completedTasks.has(task.id) ? 'default' : 'pointer',
                     fontSize: '14px',
                     fontWeight: '600'
                   }}
-                  onClick={() => {
+                  disabled={completedTasks.has(task.id)}
+                  onClick={async () => {
                     if (!visitId) {
                       alert('Visit not logged yet, please wait...');
                       return;
                     }
-                    // TODO: Implement verification flow
-                    alert(`Task ${task.label} clicked! Visit ID: ${visitId}`);
+                    
+                    try {
+                      // Simulate verification for dev
+                      const response = await fetch(`/api/verify/${task.id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          visit_id: visitId,
+                          method: 'redirect_check',
+                          status: 'success'
+                        })
+                      });
+                      
+                      if (response.ok) {
+                        setCompletedTasks(prev => new Set([...prev, task.id]));
+                        alert(`✅ Task "${task.label}" completed successfully!`);
+                      } else {
+                        const error = await response.json();
+                        alert(`❌ Failed to verify task: ${error.error}`);
+                      }
+                    } catch (err) {
+                      alert(`❌ Error: ${err}`);
+                    }
                   }}
                 >
-                  I Completed This Task
+                  {completedTasks.has(task.id) ? '✅ Completed' : 'I Completed This Task'}
                 </button>
               </li>
             ))}
