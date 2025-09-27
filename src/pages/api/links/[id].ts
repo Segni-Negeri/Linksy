@@ -38,6 +38,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(fullLink);
   }
 
-  res.setHeader('Allow', ['GET', 'PATCH']);
+  // If the request is a DELETE, soft-delete the link
+  if (req.method === 'DELETE') {
+    const { error } = await supabaseAdmin
+      .from('links')
+      .update({ is_deleted: true })
+      .eq('id', id);
+
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(204).end();
+  }
+
+  res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
   return res.status(405).end('Method Not Allowed');
 }
