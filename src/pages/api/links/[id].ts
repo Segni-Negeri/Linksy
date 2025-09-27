@@ -1,50 +1,43 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '../../../../lib/supabaseClient';
-import { getUserFromReq } from '../../../../lib/auth';
+import { createAdminClient } from '../../../lib/supabaseAdmin'; // Correct import
+import { getUserFromReq } from '../../../lib/auth';         // Correct import
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
-  
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ error: 'Invalid link ID' });
+  const { id } = req.query; // Get the link ID from the URL
+
+  const user = await getUserFromReq(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Create the Admin Client to act as the "manager"
+  const supabaseAdmin = createAdminClient();
+
+  // First, use the manager to securely fetch the link and check if this user owns it
+  const { data: link } = await supabaseAdmin.from('links').select('user_id').eq('id', id).single();
+  if (!link || link.user_id !== user.id) {
+    return res.status(404).json({ error: 'Link not found or you do not have permission.' });
   }
 
+  // If the request is a PATCH, update the link
+  if (req.method === 'PATCH') {
+    const { title, destination, logoUrl, brandColor } = req.body;
+    const { data: updatedLink, error } = await supabaseAdmin
+      .from('links')
+      .update({ title, destination, logo_url: logoUrl, brand_color: brandColor })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json(updatedLink);
+  }
+
+  // If the request is a GET, return the link with its tasks
   if (req.method === 'GET') {
-    const user = await getUserFromReq(req);
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
-
-    try {
-      // Get link with tasks
-      const { data: link, error: linkError } = await supabase
-        .from('links')
-        .select('*')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .eq('is_deleted', false)
-        .single();
-
-      if (linkError || !link) {
-        return res.status(404).json({ error: 'Link not found' });
-      }
-
-      const { data: tasks, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('link_id', id);
-
-      if (tasksError) {
-        return res.status(500).json({ error: 'Failed to fetch tasks' });
-      }
-
-      return res.status(200).json({
-        ...link,
-        tasks: tasks || []
-      });
-    } catch (e: any) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
+    const { data: fullLink, error } = await supabaseAdmin.from('links').select('*, tasks(*)').eq('id', id).single();
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json(fullLink);
   }
 
-  res.setHeader('Allow', 'GET');
+  res.setHeader('Allow', ['GET', 'PATCH']);
   return res.status(405).end('Method Not Allowed');
 }
