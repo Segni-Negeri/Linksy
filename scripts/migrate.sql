@@ -45,9 +45,9 @@ create table if not exists completions (
   created_at timestamptz not null default now()
 );
 
--- Helpful indexes
 create index if not exists idx_links_user on links(user_id) where is_deleted = false;
 create index if not exists idx_tasks_link on tasks(link_id);
 create index if not exists idx_visits_link_created on visits(link_id, created_at desc);
 create index if not exists idx_completions_task_status on completions(task_id, status);
+
 

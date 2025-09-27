@@ -35,7 +35,7 @@ export function useUser(): UseUserReturn {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: window.location.origin
       }
     });
   };
@@ -46,3 +46,4 @@ export function useUser(): UseUserReturn {
 
   return { user, loading, signIn, signOut };
 }
+

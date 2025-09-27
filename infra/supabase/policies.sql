@@ -27,3 +27,6 @@ create policy "links_owner_delete" on links
 
 -- NOTE: Apply via Supabase SQL editor or psql after creating the tables.
 
+
+
+
