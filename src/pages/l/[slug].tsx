@@ -95,9 +95,18 @@ export default function PublicLinkPage({ link, error }: Props) {
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
                   }}
-                  onClick={() => alert('Task verification not yet implemented')}
+                  onClick={() => {
+                    if (!visitId) {
+                      alert('Visit not logged yet, please wait...');
+                      return;
+                    }
+                    // TODO: Implement verification flow
+                    alert(`Task ${task.label} clicked! Visit ID: ${visitId}`);
+                  }}
                 >
                   I Completed This Task
                 </button>
