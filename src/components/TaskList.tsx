@@ -14,16 +14,25 @@ interface TaskListProps {
   linkId: string;
   tasks: Task[];
   onTaskAdded: (task: Task) => void;
+  onTaskUpdated: (task: Task) => void;
   onTaskDeleted: (taskId: string) => void;
 }
 
-export function TaskList({ linkId, tasks, onTaskAdded, onTaskDeleted }: TaskListProps) {
+export function TaskList({ linkId, tasks, onTaskAdded, onTaskUpdated, onTaskDeleted }: TaskListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     type: 'manual',
+    target: '',
+    label: '',
+    required: true
+  });
+
+  const [editingTask, setEditingTask] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    type: '',
     target: '',
     label: '',
     required: true
@@ -73,6 +82,60 @@ export function TaskList({ linkId, tasks, onTaskAdded, onTaskDeleted }: TaskList
     const { name, value, type } = e.target;
     const isCheckbox = type === 'checkbox';
     setFormData(prev => ({ ...prev, [name]: isCheckbox ? (e.target as HTMLInputElement).checked : value }));
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const isCheckbox = type === 'checkbox';
+    setEditFormData(prev => ({ ...prev, [name]: isCheckbox ? (e.target as HTMLInputElement).checked : value }));
+  };
+
+  const startEdit = (task: Task) => {
+    setEditingTask(task.id);
+    setEditFormData({
+      type: task.type,
+      target: task.target || '',
+      label: task.label,
+      required: task.required
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Please sign in to edit tasks');
+        return;
+      }
+
+      const response = await fetch(`/api/links/${linkId}/tasks/${editingTask}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(editFormData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        onTaskUpdated(data);
+        setEditingTask(null);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update task');
+      }
+    } catch (err) {
+      setError('An error occurred while updating the task');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleDelete = async (taskId: string) => {
@@ -160,20 +223,54 @@ export function TaskList({ linkId, tasks, onTaskAdded, onTaskDeleted }: TaskList
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {tasks.map((task) => (
             <div key={task.id} style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: 'white' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
-                    {task.label}
-                    {task.required && (<span style={{ marginLeft: '8px', padding: '2px 6px', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>REQUIRED</span>)}
-                  </h3>
-                  <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>Type: {task.type}</p>
-                  {task.target && (<p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>Target: {task.target}</p>)}
+              {editingTask === task.id ? (
+                <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <h3 style={{ margin: '0 0 16px 0' }}>Edit Task</h3>
+                  <div>
+                    <label htmlFor={`edit-type-${task.id}`} style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Task Type</label>
+                    <select id={`edit-type-${task.id}`} name="type" value={editFormData.type} onChange={handleEditChange} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '16px' }}>
+                      <option value="manual">Manual Verification</option>
+                      <option value="youtube">YouTube Subscribe</option>
+                      <option value="instagram">Instagram Follow</option>
+                      <option value="join_telegram">Join Telegram</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor={`edit-label-${task.id}`} style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Task Label *</label>
+                    <input type="text" id={`edit-label-${task.id}`} name="label" value={editFormData.label} onChange={handleEditChange} required placeholder="Follow us on Instagram" style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '16px' }} />
+                  </div>
+                  <div>
+                    <label htmlFor={`edit-target-${task.id}`} style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Target URL/Handle</label>
+                    <input type="text" id={`edit-target-${task.id}`} name="target" value={editFormData.target} onChange={handleEditChange} placeholder="https://instagram.com/yourhandle or @yourhandle" style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '16px' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input type="checkbox" id={`edit-required-${task.id}`} name="required" checked={editFormData.required} onChange={handleEditChange} />
+                    <label htmlFor={`edit-required-${task.id}`} style={{ fontWeight: '600' }}>Required task</label>
+                  </div>
+                  {error && (
+                    <div style={{ padding: '12px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#dc2626' }}>{error}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <Button type="button" variant="secondary" onClick={() => setEditingTask(null)}>Cancel</Button>
+                    <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Changes'}</Button>
+                  </div>
+                </form>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
+                      {task.label}
+                      {task.required && (<span style={{ marginLeft: '8px', padding: '2px 6px', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>REQUIRED</span>)}
+                    </h3>
+                    <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>Type: {task.type}</p>
+                    {task.target && (<p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '14px' }}>Target: {task.target}</p>)}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button variant="secondary" onClick={() => startEdit(task)}>Edit</Button>
+                    <Button variant="secondary" onClick={() => handleDelete(task.id)}>Delete</Button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button variant="secondary" onClick={() => alert('Edit task functionality coming soon!')}>Edit</Button>
-                  <Button variant="secondary" onClick={() => handleDelete(task.id)}>Delete</Button>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
