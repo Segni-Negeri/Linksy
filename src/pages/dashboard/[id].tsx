@@ -43,8 +43,11 @@ export default function LinkEditor({ linkId }: Props) {
   useEffect(() => {
     if (user && linkId) {
       fetchLink();
+    } else if (!loading && !user) {
+      // Redirect to home if not authenticated
+      window.location.href = '/';
     }
-  }, [user, linkId]);
+  }, [user, linkId, loading]);
 
   const fetchLink = async () => {
     try {
@@ -129,6 +132,7 @@ export default function LinkEditor({ linkId }: Props) {
       <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
         <h1>Link Editor</h1>
         <p>Please sign in to edit links.</p>
+        <p>Redirecting to home page...</p>
       </main>
     );
   }

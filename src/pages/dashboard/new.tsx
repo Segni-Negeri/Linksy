@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../../hooks/useUser';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabaseClient';
@@ -14,6 +14,13 @@ export default function CreateLink() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      // Redirect to home if not authenticated
+      window.location.href = '/';
+    }
+  }, [user, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +78,7 @@ export default function CreateLink() {
       <main style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
         <h1>Create New Link</h1>
         <p>Please sign in to create a link.</p>
+        <p>Redirecting to home page...</p>
       </main>
     );
   }

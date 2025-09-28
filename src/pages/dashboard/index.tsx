@@ -21,8 +21,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchLinks();
+    } else if (!loading) {
+      // Redirect to home if not authenticated
+      window.location.href = '/';
     }
-  }, [user]);
+  }, [user, loading]);
 
   const fetchLinks = async () => {
     try {
@@ -61,6 +64,7 @@ export default function Dashboard() {
       <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
         <h1>Dashboard</h1>
         <p>Please sign in to access your dashboard.</p>
+        <p>Redirecting to home page...</p>
       </main>
     );
   }
