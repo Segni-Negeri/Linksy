@@ -72,14 +72,19 @@ export default function Dashboard() {
   return (
     <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <h1>Dashboard</h1>
+        <div>
+          <h1>Dashboard</h1>
+          <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+            Free Plan — {links.length}/10 links
+          </p>
+        </div>
         <Button onClick={() => window.location.href = '/dashboard/new'}>
           Create New Link
         </Button>
       </div>
 
       <div>
-        <h2>Your Links ({links.length})</h2>
+        <h2>Your Links</h2>
         
         {links.length === 0 ? (
           <div style={{ 
