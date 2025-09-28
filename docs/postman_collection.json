@@ -1,0 +1,350 @@
+{
+  "info": {
+    "name": "Linksy API Collection",
+    "description": "Complete API collection for Linksy - branded short links with social task verification",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{JWT_TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "JWT_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "LINK_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "TASK_ID",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public Endpoints",
+      "item": [
+        {
+          "name": "Hello",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/hello",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "hello"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/slug/{{slug}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "slug", "{{slug}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"link_id\": \"{{LINK_ID}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/visits",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "visits"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visit_id\": \"{{visit_id}}\",\n  \"method\": \"redirect_check\",\n  \"status\": \"success\",\n  \"meta\": {}\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/verify/{{TASK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "verify", "{{TASK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Manual Claim",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visit_id\": \"{{visit_id}}\",\n  \"task_id\": \"{{TASK_ID}}\",\n  \"proof_url\": \"https://example.com/proof.png\",\n  \"meta\": {}\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/claims",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "claims"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Webhook Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visit_id\": \"{{visit_id}}\",\n  \"task_id\": \"{{TASK_ID}}\",\n  \"status\": \"success\",\n  \"meta\": {\n    \"platform\": \"youtube\",\n    \"channel_id\": \"UC1234567890\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/webhooks/social-callback",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "webhooks", "social-callback"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authenticated Endpoints",
+      "item": [
+        {
+          "name": "Create Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"my-awesome-link\",\n  \"title\": \"My Awesome Link\",\n  \"destination\": \"https://example.com\",\n  \"brandColor\": \"#3b82f6\",\n  \"logoUrl\": \"https://example.com/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/links",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Links",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/links",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Link",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Link Title\",\n  \"destination\": \"https://updated-example.com\",\n  \"brandColor\": \"#10b981\",\n  \"logoUrl\": \"https://updated-example.com/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Link",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"youtube\",\n  \"target\": \"https://youtube.com/channel/UC1234567890\",\n  \"label\": \"Subscribe to our YouTube channel\",\n  \"required\": true\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}/tasks",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}", "tasks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Updated task label\",\n  \"required\": false\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}/tasks/{{TASK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}", "tasks", "{{TASK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/links/{{LINK_ID}}/tasks/{{TASK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "links", "{{LINK_ID}}", "tasks", "{{TASK_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/analytics/{{LINK_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "analytics", "{{LINK_ID}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Endpoints",
+      "item": [
+        {
+          "name": "Mark Completion Success",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SERVICE_ROLE_KEY}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"success\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/completions/{{completion_id}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "completions", "{{completion_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
