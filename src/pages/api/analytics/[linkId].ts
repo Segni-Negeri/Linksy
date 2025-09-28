@@ -2,6 +2,20 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromReq } from '../../../lib/auth'; 
 import { createAdminClient } from '../../../lib/supabaseAdmin';
 
+// Simple in-memory cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+// Clean up old cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      cache.delete(key);
+    }
+  }
+}, CACHE_DURATION);
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { linkId } = req.query;
   
@@ -13,6 +27,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const user = await getUserFromReq(req);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+      // Check cache first
+      const cacheKey = `analytics_${linkId}_${user.id}`;
+      const cached = cache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return res.status(200).json({
+          ...cached.data,
+          cached: true,
+          cacheTimestamp: cached.timestamp
+        });
+      }
 
       const supabaseAdmin = createAdminClient();
 
@@ -71,12 +96,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         chartData.push({ date: dateStr, visits: visitsByDate[dateStr] || 0 });
       }
 
-      return res.status(200).json({
+      const result = {
         linkId,
         totalVisits: totalVisits || 0,
         totalCompletions: totalCompletions || 0,
         conversionRate: Math.round(conversionRate * 100) / 100,
         chartData
+      };
+
+      // Cache the result
+      cache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now()
+      });
+
+      return res.status(200).json({
+        ...result,
+        cached: false,
+        cacheTimestamp: Date.now()
       });
 
     } catch (e: any) {

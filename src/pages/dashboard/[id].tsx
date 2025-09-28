@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../hooks/useUser';
 import { Button } from '../../components/ui/Button';
 import { TaskList } from '../../components/TaskList';
+import { AnalyticsPanel } from '../../components/AnalyticsPanel';
 import { supabase } from '../../lib/supabaseClient';
 
 interface Link {
@@ -340,6 +341,11 @@ export default function LinkEditor({ linkId }: Props) {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Analytics Section */}
+      <div style={{ marginTop: '48px' }}>
+        <AnalyticsPanel linkId={linkId} />
       </div>
     </main>
   );
