@@ -14,6 +14,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: validation.errors.join(', ') });
     }
 
+    // Check user's current link count (free plan limit: 10)
+    const { count: currentLinkCount, error: countError } = await supabaseAdmin
+      .from('links')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_deleted', false);
+
+    if (countError) {
+      return res.status(500).json({ error: 'Failed to check link count' });
+    }
+
+    const FREE_PLAN_LIMIT = 10;
+    if ((currentLinkCount || 0) >= FREE_PLAN_LIMIT) {
+      return res.status(402).json({ 
+        error: `Free plan limit reached. You can create up to ${FREE_PLAN_LIMIT} links. Upgrade to create more.`,
+        currentCount: currentLinkCount,
+        limit: FREE_PLAN_LIMIT
+      });
+    }
+
     const { slug, destination, title, logoUrl, brandColor } = req.body;
     const { data, error } = await supabaseAdmin.from('links').insert({ user_id: user.id, slug, destination, title, logo_url: logoUrl, brand_color: brandColor }).select('id, slug').single();
     if (error) {
