@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../../lib/supabaseAdmin'; // Correct import
 import { getUserFromReq } from '../../../lib/auth';         // Correct import
+import { validateUpdateLink } from '../../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query; // Get the link ID from the URL
@@ -19,6 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // If the request is a PATCH, update the link
   if (req.method === 'PATCH') {
+    const validation = validateUpdateLink(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.errors.join(', ') });
+    }
+
     const { title, destination, logoUrl, brandColor } = req.body;
     const { data: updatedLink, error } = await supabaseAdmin
       .from('links')

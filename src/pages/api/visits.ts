@@ -1,13 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../lib/supabaseAdmin';
+import { validateVisit } from '../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const { link_id } = req.body || {};
-      
-      if (!link_id) {
-        return res.status(400).json({ error: 'Missing link_id' });
+      const validation = validateVisit({ link_id });
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.errors.join(', ') });
       }
 
       const supabaseAdmin = createAdminClient();

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../../../lib/supabaseAdmin';
 import { getUserFromReq } from '../../../../lib/auth';
+import { validateCreateTask } from '../../../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -15,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const { type, target, label, required = true } = req.body || {};
-      
-      if (!type || !label) {
-        return res.status(400).json({ error: 'Missing required fields: type, label' });
+      const validation = validateCreateTask({ type, target, label, required });
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.errors.join(', ') });
       }
 
       const supabaseAdmin = createAdminClient();

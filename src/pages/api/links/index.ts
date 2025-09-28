@@ -1,13 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../../lib/supabaseAdmin';
 import { getUserFromReq } from '../../../lib/auth';
+import { validateCreateLink } from '../../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    // This POST handler is already correct and does not need to be changed.
     const supabaseAdmin = createAdminClient();
     const user = await getUserFromReq(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const validation = validateCreateLink(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.errors.join(', ') });
+    }
 
     const { slug, destination, title, logoUrl, brandColor } = req.body;
     const { data, error } = await supabaseAdmin.from('links').insert({ user_id: user.id, slug, destination, title, logo_url: logoUrl, brand_color: brandColor }).select('id, slug').single();

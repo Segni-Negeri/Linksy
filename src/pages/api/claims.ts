@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../lib/supabaseAdmin';
+import { validateCompletion } from '../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -9,9 +10,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { visit_id, task_id, proof_url, meta = {} } = req.body || {};
-
-    if (!visit_id || !task_id) {
-      return res.status(400).json({ error: 'Missing visit_id or task_id' });
+    const validation = validateCompletion({ visit_id, status: 'pending' });
+    if (!task_id || typeof task_id !== 'string') {
+      return res.status(400).json({ error: 'Missing task_id' });
+    }
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.errors.join(', ') });
     }
 
     const supabaseAdmin = createAdminClient();
