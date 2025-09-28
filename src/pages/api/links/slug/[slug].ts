@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createAdminClient } from '../../../../lib/supabaseAdmin';
+import { rateLimit, getClientIP } from '../../../../lib/rateLimiter';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { slug } = req.query;
@@ -10,6 +11,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
+      // Rate limiting: 20 requests per minute per IP
+      const clientIP = getClientIP(req);
+      const rateLimitResult = rateLimit(clientIP, 20, 60 * 1000);
+      
+      if (!rateLimitResult.allowed) {
+        res.setHeader('X-RateLimit-Limit', '20');
+        res.setHeader('X-RateLimit-Remaining', '0');
+        res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimitResult.resetTime / 1000).toString());
+        return res.status(429).json({ error: 'Too many requests' });
+      }
+      
+      // Set rate limit headers
+      res.setHeader('X-RateLimit-Limit', '20');
+      res.setHeader('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+      res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimitResult.resetTime / 1000).toString());
+      
       const supabaseAdmin = createAdminClient();
       
       // Get public link with tasks (no auth required)
