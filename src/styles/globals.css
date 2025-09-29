@@ -1,18 +1,16 @@
-html, body, #__next {
-  height: 100%;
-}
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-}
-main {
-  max-width: 720px;
-  margin: 40px auto;
-  padding: 0 16px;
-}
-button {
-  cursor: pointer;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-
+/* Minimal base styles */
+@layer base {
+  html, body, #__next {
+    height: 100%;
+  }
+  body {
+    @apply antialiased;
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  }
+}
 

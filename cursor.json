@@ -1,0 +1,48 @@
+{
+  "name": "Linksy",
+  "description": "Branded short links with social task verification",
+  "version": "1.0.0",
+  "type": "nextjs",
+  "build": {
+    "command": "npm run build",
+    "output": ".next"
+  },
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL",
+      "required": true
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Supabase anonymous key",
+      "required": true
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "description": "Supabase service role key (server-only)",
+      "required": true,
+      "secret": true
+    },
+    "GOOGLE_OAUTH_CLIENT_ID": {
+      "description": "Google OAuth client ID",
+      "required": true
+    },
+    "GOOGLE_OAUTH_CLIENT_SECRET": {
+      "description": "Google OAuth client secret",
+      "required": true,
+      "secret": true
+    },
+    "NEXTAUTH_URL": {
+      "description": "Base URL for authentication callbacks",
+      "required": true
+    }
+  },
+  "domains": [
+    "linksy.com",
+    "www.linksy.com"
+  ],
+  "features": {
+    "serverless": true,
+    "edge": false,
+    "static": true
+  }
+}
+
