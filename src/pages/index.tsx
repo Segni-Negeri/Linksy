@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import { Button } from '../components/ui/Button'
 import { motion } from 'framer-motion'
 import { useUser } from '../hooks/useUser'
@@ -10,6 +11,7 @@ export default function Home() {
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { user, loading, signOut } = useUser()
+  const router = useRouter()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <Link href="/signup" className="text-emerald-600 font-medium">Sign Up</Link>
+                <Link href="/login" className="text-emerald-600 font-medium">Sign Up</Link>
                 <Link href="/login" className="text-slate-600">Log In</Link>
               </>
             )}
@@ -136,7 +138,16 @@ export default function Home() {
           {/* CTA form */}
           <motion.form
             className="mx-auto mt-10 flex max-w-3xl items-center gap-3 px-4 md:px-0"
-            onSubmit={(e) => { e.preventDefault(); /* navigate later */ }}
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!url) return
+              if (user) {
+                const q = new URLSearchParams({ destination: url }).toString()
+                router.push(`/dashboard/new?${q}`)
+              } else {
+                router.push('/login')
+              }
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
