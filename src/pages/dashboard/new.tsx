@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useUser } from '../../hooks/useUser';
-import { Button } from '../../components/ui/Button';
-import { supabase } from '../../lib/supabaseClient';
+import { useState, useEffect } from 'react'
+import { useUser } from '../../hooks/useUser'
+import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
+import { Label } from '../../components/ui/Label'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { supabase } from '../../lib/supabaseClient'
+import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
 
 export default function CreateLink() {
   const { user, loading } = useUser();
@@ -45,13 +50,18 @@ export default function CreateLink() {
 
       if (response.ok) {
         const data = await response.json();
+        toast.success('Link created successfully!');
         window.location.href = `/dashboard/${data.id}`;
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to create link');
+        const errorMessage = errorData.error || 'Failed to create link';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (err) {
-      setError('An error occurred while creating the link');
+      const errorMessage = 'An error occurred while creating the link';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -66,185 +76,293 @@ export default function CreateLink() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
-        <h1>Create New Link</h1>
-        <p>Loading...</p>
-      </main>
-    );
+      <div className="min-h-screen bg-slate-50 flex">
+        <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
+          <div className="p-4 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
+              <span className="font-semibold text-lg">Linksy</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-slate-500">Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   if (!user) {
     return (
-      <main style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
-        <h1>Create New Link</h1>
-        <p>Please sign in to create a link.</p>
-        <p>Redirecting to home page...</p>
-      </main>
-    );
+      <div className="min-h-screen bg-slate-50 flex">
+        <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
+          <div className="p-4 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
+              <span className="font-semibold text-lg">Linksy</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-slate-500">Please sign in to create a link.</div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <main style={{ maxWidth: '600px', margin: '40px auto', padding: '0 16px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1>Create New Link</h1>
-        <p style={{ color: '#6b7280' }}>
-          Create a branded short link that gates your destination behind social tasks.
-        </p>
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
+            <span className="font-semibold text-lg">Linksy</span>
+          </div>
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          <a href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+            <span>📊</span>
+            Dashboard
+          </a>
+          <a href="/dashboard/new" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-md">
+            <span>➕</span>
+            Create Link
+          </a>
+          <a href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+            <span>🔗</span>
+            My Links
+          </a>
+        </nav>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div>
-          <label htmlFor="slug" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-            Slug *
-          </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#6b7280' }}>linksy.com/l/</span>
-            <input
-              type="text"
-              id="slug"
-              name="slug"
-              value={formData.slug}
-              onChange={handleChange}
-              required
-              placeholder="my-link"
-              style={{
-                flex: 1,
-                padding: '12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '16px'
-              }}
-            />
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-slate-900">Create New Link</h1>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
+                {user.email?.charAt(0).toUpperCase()}
+              </div>
+            </div>
           </div>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
-            Only letters, numbers, and hyphens allowed
-          </p>
-        </div>
+        </header>
 
-        <div>
-          <label htmlFor="title" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-            Title
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="My Awesome Link"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '16px'
-            }}
-          />
-        </div>
+        {/* Content */}
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">
+            <motion.div 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Left Column - Form */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Link Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <Label htmlFor="destination">Destination URL *</Label>
+                        <Input
+                          type="url"
+                          id="destination"
+                          name="destination"
+                          value={formData.destination}
+                          onChange={handleChange}
+                          placeholder="https://example.com"
+                          required
+                        />
+                      </div>
 
-        <div>
-          <label htmlFor="destination" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-            Destination URL *
-          </label>
-          <input
-            type="url"
-            id="destination"
-            name="destination"
-            value={formData.destination}
-            onChange={handleChange}
-            required
-            placeholder="https://example.com"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '16px'
-            }}
-          />
-        </div>
+                      <div>
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                          type="text"
+                          id="title"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleChange}
+                          placeholder="My Awesome Link"
+                        />
+                      </div>
 
-        <div>
-          <label htmlFor="brandColor" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-            Brand Color
-          </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <input
-              type="color"
-              id="brandColor"
-              name="brandColor"
-              value={formData.brandColor}
-              onChange={handleChange}
-              style={{
-                width: '50px',
-                height: '40px',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-            />
-            <input
-              type="text"
-              value={formData.brandColor}
-              onChange={handleChange}
-              name="brandColor"
-              style={{
-                flex: 1,
-                padding: '12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '16px'
-              }}
-            />
+                      <div>
+                        <Label htmlFor="slug">Slug *</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-slate-500">linksy.com/l/</span>
+                          <Input
+                            type="text"
+                            id="slug"
+                            name="slug"
+                            value={formData.slug}
+                            onChange={handleChange}
+                            placeholder="my-link"
+                            required
+                            className="flex-1"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Only letters, numbers, and hyphens allowed
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="brandColor">Brand Color</Label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            id="brandColor"
+                            name="brandColor"
+                            value={formData.brandColor}
+                            onChange={handleChange}
+                            className="w-12 h-10 border border-slate-300 rounded-md cursor-pointer"
+                          />
+                          <Input
+                            type="text"
+                            value={formData.brandColor}
+                            onChange={handleChange}
+                            name="brandColor"
+                            placeholder="#111827"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="logoUrl">Logo URL</Label>
+                        <Input
+                          type="url"
+                          id="logoUrl"
+                          name="logoUrl"
+                          value={formData.logoUrl}
+                          onChange={handleChange}
+                          placeholder="https://example.com/logo.png"
+                        />
+                      </div>
+
+                      {error && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                          {error}
+                        </div>
+                      )}
+
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => window.location.href = '/dashboard'}
+                          className="flex-1"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {isSubmitting ? 'Creating...' : 'Create Link'}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                {/* Tasks Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tasks</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">Follow on Instagram</div>
+                          <div className="text-xs text-slate-500">@yourusername</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">Subscribe to YouTube</div>
+                          <div className="text-xs text-slate-500">@yourchannel</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">Join Telegram</div>
+                          <div className="text-xs text-slate-500">@yourgroup</div>
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full mt-4">
+                      + Add Task
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Live Preview */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Live Preview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+                      {/* Preview Header */}
+                      <div className="flex items-center gap-3">
+                        {formData.logoUrl ? (
+                          <img src={formData.logoUrl} alt="Logo" className="w-8 h-8 rounded" />
+                        ) : (
+                          <div className="w-8 h-8 rounded bg-slate-200 flex items-center justify-center">
+                            <span className="text-xs">⛓️</span>
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold" style={{ color: formData.brandColor }}>
+                            {formData.title || 'Untitled Link'}
+                          </h3>
+                          <p className="text-xs text-slate-500">linksy.com/l/{formData.slug || 'my-link'}</p>
+                        </div>
+                      </div>
+
+                      {/* Preview Tasks */}
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-slate-700">Complete these tasks to unlock:</div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                            <div className="w-4 h-4 border border-slate-300 rounded"></div>
+                            <span className="text-sm">Follow on Instagram</span>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                            <div className="w-4 h-4 border border-slate-300 rounded"></div>
+                            <span className="text-sm">Subscribe to YouTube</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preview Button */}
+                      <div className="pt-4">
+                        <div className="w-full h-10 bg-slate-200 rounded flex items-center justify-center text-sm text-slate-500">
+                          Complete tasks to unlock
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
           </div>
-        </div>
-
-        <div>
-          <label htmlFor="logoUrl" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-            Logo URL
-          </label>
-          <input
-            type="url"
-            id="logoUrl"
-            name="logoUrl"
-            value={formData.logoUrl}
-            onChange={handleChange}
-            placeholder="https://example.com/logo.png"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '16px'
-            }}
-          />
-        </div>
-
-        {error && (
-          <div style={{
-            padding: '12px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '6px',
-            color: '#dc2626'
-          }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <Button 
-            type="button" 
-            variant="secondary"
-            onClick={() => window.location.href = '/dashboard'}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create Link'}
-          </Button>
-        </div>
-      </form>
-    </main>
-  );
+        </main>
+      </div>
+    </div>
+  )
 }

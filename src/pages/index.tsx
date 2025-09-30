@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '../components/ui/Button'
+import { motion } from 'framer-motion'
 
 export default function Home() {
   const [url, setUrl] = useState('')
@@ -28,19 +29,32 @@ export default function Home() {
 
         {/* Hero */}
         <header className="container mx-auto px-4 pt-8 pb-16 md:pt-20 md:pb-24">
-          <h1 className="mx-auto max-w-5xl text-4xl leading-tight font-extrabold tracking-tight text-slate-900 drop-shadow-sm md:text-7xl md:leading-tight text-center">
+          <motion.h1 
+            className="mx-auto max-w-5xl text-4xl leading-tight font-extrabold tracking-tight text-slate-900 drop-shadow-sm md:text-7xl md:leading-tight text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
             Transform Your Links
             <br className="hidden md:block" />
             Into a Growth Tool
-          </h1>
-          <p className="mx-auto mt-6 max-w-3xl text-center text-slate-600 text-base md:text-lg">
+          </motion.h1>
+          <motion.p 
+            className="mx-auto mt-6 max-w-3xl text-center text-slate-600 text-base md:text-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
             Linksy lets you lock your links with custom tasks for your audience — like following, subscribing, or joining — before they can access your content.
-          </p>
+          </motion.p>
 
           {/* CTA form */}
-          <form
+          <motion.form
             className="mx-auto mt-10 flex max-w-3xl items-center gap-3 px-4 md:px-0"
             onSubmit={(e) => { e.preventDefault(); /* navigate later */ }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
             <input
               value={url}
@@ -51,7 +65,7 @@ export default function Home() {
             <Button type="submit" className="h-12 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md">
               Add Tasks
             </Button>
-          </form>
+          </motion.form>
         </header>
       </div>
 
