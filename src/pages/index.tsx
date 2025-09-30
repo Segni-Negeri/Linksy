@@ -1,10 +1,39 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '../components/ui/Button'
 import { motion } from 'framer-motion'
+import { useUser } from '../hooks/useUser'
+import toast from 'react-hot-toast'
 
 export default function Home() {
   const [url, setUrl] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const { user, loading, signOut } = useUser()
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      toast.success('Signed out successfully')
+      setShowDropdown(false)
+    } catch (error) {
+      toast.error('Failed to sign out')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -22,8 +51,64 @@ export default function Home() {
             <span className="font-semibold text-lg">Linksy</span>
           </div>
           <div className="flex items-center gap-6 text-sm">
-            <Link href="#" className="text-emerald-600 font-medium">Sign Up</Link>
-            <Link href="#" className="text-slate-600">Log In</Link>
+            {loading ? (
+              <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />
+            ) : user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="User avatar"
+                      className="w-8 h-8 rounded-full border-2 border-slate-200"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-medium">
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                </button>
+
+                {showDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 py-1 z-50"
+                  >
+                    <div className="px-4 py-2 border-b border-slate-100">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {user.user_metadata?.full_name || user.email}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Sign Out
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/signup" className="text-emerald-600 font-medium">Sign Up</Link>
+                <Link href="/login" className="text-slate-600">Log In</Link>
+              </>
+            )}
           </div>
         </nav>
 
