@@ -28,6 +28,7 @@ interface Props {
 export default function PublicLinkPage({ link, error }: Props) {
   const [visitId, setVisitId] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
+  const [verifyingTasks, setVerifyingTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (link?.id) {
@@ -106,6 +107,49 @@ export default function PublicLinkPage({ link, error }: Props) {
     }
   };
 
+  // Handle automatic verification when "Open Link" is clicked
+  const handleOpenLink = async (taskId: string, targetUrl: string) => {
+    if (!visitId) {
+      alert('Visit not logged yet, please wait...');
+      return;
+    }
+
+    // Open the target URL in a new tab
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+
+    // Start verification process
+    setVerifyingTasks(prev => new Set([...prev, taskId]));
+
+    // Wait 5 seconds, then auto-complete
+    setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/verify/${taskId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visit_id: visitId,
+            method: 'time_based_verification',
+            status: 'success'
+          })
+        });
+
+        if (response.ok) {
+          setCompletedTasks(prev => new Set([...prev, taskId]));
+        } else {
+          console.error('Failed to verify task:', await response.json());
+        }
+      } catch (err) {
+        console.error('Error verifying task:', err);
+      } finally {
+        setVerifyingTasks(prev => {
+          const next = new Set(prev);
+          next.delete(taskId);
+          return next;
+        });
+      }
+    }, 5000);
+  };
+
   const requiredTasks = link.tasks.filter(task => task.required);
   const completedRequiredTasks = requiredTasks.filter(task => completedTasks.has(task.id));
   const allRequiredCompleted = requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
@@ -157,52 +201,29 @@ export default function PublicLinkPage({ link, error }: Props) {
                       <h3 className="font-semibold text-slate-900 mb-2">{task.label}</h3>
                       {task.target && (
                         <div className="space-y-2">
-                          <a
-                            href={task.target}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                          <button
+                            onClick={() => handleOpenLink(task.id, task.target!)}
+                            disabled={verifyingTasks.has(task.id) || completedTasks.has(task.id)}
+                            className={`text-sm font-medium transition-colors ${
+                              verifyingTasks.has(task.id) || completedTasks.has(task.id)
+                                ? 'text-slate-400 cursor-not-allowed'
+                                : 'text-emerald-600 hover:text-emerald-700'
+                            }`}
                           >
-                            Open Link
-                          </a>
+                            {verifyingTasks.has(task.id) ? 'Verifying...' : 'Open Link'}
+                          </button>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               id={`task-${task.id}`}
                               checked={completedTasks.has(task.id)}
-                              onChange={async (e) => {
-                                if (!visitId) {
-                                  alert('Visit not logged yet, please wait...');
-                                  return;
-                                }
-                                try {
-                                  const response = await fetch(`/api/verify/${task.id}`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      visit_id: visitId,
-                                      method: 'redirect_check',
-                                      status: e.target.checked ? 'success' : 'failed'
-                                    })
-                                  });
-                                  if (response.ok) {
-                                    setCompletedTasks(prev => {
-                                      const next = new Set(prev)
-                                      if (e.target.checked) next.add(task.id); else next.delete(task.id)
-                                      return next
-                                    })
-                                  } else {
-                                    const err = await response.json()
-                                    alert(`Verification failed: ${err.error}`)
-                                  }
-                                } catch (err) {
-                                  alert(`Error: ${err}`)
-                                }
-                              }}
-                              className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                              disabled={true}
+                              className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 disabled:opacity-50"
                             />
-                            <label htmlFor={`task-${task.id}`} className="text-sm text-slate-700 cursor-pointer">
-                              I've done this
+                            <label htmlFor={`task-${task.id}`} className={`text-sm cursor-default ${
+                              completedTasks.has(task.id) ? 'text-slate-500' : 'text-slate-700'
+                            }`}>
+                              {completedTasks.has(task.id) ? 'Completed' : 'I\'ve done this'}
                             </label>
                           </div>
                         </div>
