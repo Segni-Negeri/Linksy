@@ -86,53 +86,54 @@ export default function PublicLinkPage({ link, error }: Props) {
                 backgroundColor: '#f9fafb'
               }}>
                 <h3 style={{ margin: '0 0 8px 0' }}>{task.label}</h3>
-                <p style={{ margin: '0 0 12px 0', color: '#6b7280' }}>
-                  Type: {task.type} {task.target && `• Target: ${task.target}`}
-                </p>
-                <button 
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: completedTasks.has(task.id) ? '#10b981' : (link.brand_color || '#111827'),
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: completedTasks.has(task.id) ? 'default' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}
-                  disabled={completedTasks.has(task.id)}
-                  onClick={async () => {
-                    if (!visitId) {
-                      alert('Visit not logged yet, please wait...');
-                      return;
-                    }
-                    
-                    try {
-                      // Simulate verification for dev
-                      const response = await fetch(`/api/verify/${task.id}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          visit_id: visitId,
-                          method: 'redirect_check',
-                          status: 'success'
-                        })
-                      });
-                      
-                      if (response.ok) {
-                        setCompletedTasks(prev => new Set([...prev, task.id]));
-                        alert(`✅ Task "${task.label}" completed successfully!`);
-                      } else {
-                        const error = await response.json();
-                        alert(`❌ Failed to verify task: ${error.error}`);
-                      }
-                    } catch (err) {
-                      alert(`❌ Error: ${err}`);
-                    }
-                  }}
-                >
-                  {completedTasks.has(task.id) ? '✅ Completed' : 'I Completed This Task'}
-                </button>
+                {task.target && (
+                  <div style={{ margin: '0 0 12px 0', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <a
+                      href={task.target}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#10b981', fontWeight: 600 }}
+                    >
+                      Open Link
+                    </a>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#374151' }}>
+                      <input
+                        type="checkbox"
+                        checked={completedTasks.has(task.id)}
+                        onChange={async (e) => {
+                          if (!visitId) {
+                            alert('Visit not logged yet, please wait...');
+                            return;
+                          }
+                          try {
+                            const response = await fetch(`/api/verify/${task.id}`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                visit_id: visitId,
+                                method: 'redirect_check',
+                                status: e.target.checked ? 'success' : 'failed'
+                              })
+                            });
+                            if (response.ok) {
+                              setCompletedTasks(prev => {
+                                const next = new Set(prev)
+                                if (e.target.checked) next.add(task.id); else next.delete(task.id)
+                                return next
+                              })
+                            } else {
+                              const err = await response.json()
+                              alert(`Verification failed: ${err.error}`)
+                            }
+                          } catch (err) {
+                            alert(`Error: ${err}`)
+                          }
+                        }}
+                      />
+                      I've done this
+                    </label>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -145,47 +146,26 @@ export default function PublicLinkPage({ link, error }: Props) {
         const completedRequiredTasks = requiredTasks.filter(task => completedTasks.has(task.id));
         const allRequiredCompleted = requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
         
-        if (allRequiredCompleted) {
-          return (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '24px', 
-              backgroundColor: '#d1fae5', 
-              borderRadius: '8px',
-              border: '2px solid #10b981'
-            }}>
-              <h2 style={{ color: '#065f46', margin: '0 0 16px 0' }}>🎉 All Tasks Completed!</h2>
-              <p style={{ margin: '0 0 20px 0', color: '#065f46' }}>
-                You've successfully completed all required tasks.
-              </p>
-              <a 
-                href={link.destination} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-block',
-                  padding: '12px 24px',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  fontSize: '16px'
-                }}
-              >
-                🔗 Visit Destination
-              </a>
-            </div>
-          );
-        }
-        
         return (
-          <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontWeight: 'bold' }}>
-              Complete all required tasks to unlock the destination link.
-            </p>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              disabled={!allRequiredCompleted}
+              onClick={() => { window.location.href = link.destination }}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: allRequiredCompleted ? '#10b981' : '#d1d5db',
+                color: allRequiredCompleted ? 'white' : '#6b7280',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                cursor: allRequiredCompleted ? 'pointer' : 'not-allowed'
+              }}
+            >
+              {allRequiredCompleted ? 'Unlock Link' : 'Complete all tasks to unlock'}
+            </button>
             {requiredTasks.length > 0 && (
-              <p style={{ margin: '8px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+              <p style={{ marginTop: '8px', color: '#6b7280', fontSize: '14px' }}>
                 Progress: {completedRequiredTasks.length}/{requiredTasks.length} required tasks completed
               </p>
             )}

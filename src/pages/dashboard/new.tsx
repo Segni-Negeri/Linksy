@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { supabase } from '../../lib/supabaseClient'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
+import Modal from '../../components/ui/Modal'
+import { useRouter } from 'next/router'
 
 export default function CreateLink() {
   const { user, loading } = useUser();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     slug: '',
     title: '',
@@ -17,6 +20,15 @@ export default function CreateLink() {
     brandColor: '#111827',
     logoUrl: ''
   });
+  type TaskType = 'telegram' | 'instagram' | 'youtube' | 'discord'
+  interface ActiveTask { type: TaskType; label: string; link: string }
+  const taskDefaults: Record<TaskType, { name: string; defaultLabel: string; linkPlaceholder: string }> = {
+    telegram: { name: 'Telegram Join', defaultLabel: 'Join our Telegram', linkPlaceholder: 'Telegram Join URL' },
+    instagram: { name: 'Instagram Follow', defaultLabel: 'Follow us on Instagram', linkPlaceholder: 'Instagram profile URL' },
+    youtube: { name: 'YouTube Subscribe', defaultLabel: 'Subscribe to our YouTube', linkPlaceholder: 'YouTube channel URL' },
+    discord: { name: 'Discord Join', defaultLabel: 'Join our Discord', linkPlaceholder: 'Discord invite URL' },
+  }
+  const [activeTasks, setActiveTasks] = useState<ActiveTask[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,6 +38,17 @@ export default function CreateLink() {
       window.location.href = '/';
     }
   }, [user, loading]);
+
+  // Prefill destination from query param if present
+  useEffect(() => {
+    const q = router.query?.destination as string | undefined
+    if (q && !formData.destination) {
+      setFormData(prev => ({ ...prev, destination: q }))
+    }
+  }, [router.query])
+
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,13 +68,45 @@ export default function CreateLink() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          slug: formData.slug,
+          title: formData.title,
+          destination: formData.destination,
+          brandColor: formData.brandColor,
+          logoUrl: formData.logoUrl
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
-        toast.success('Link created successfully!');
-        window.location.href = `/dashboard/${data.id}`;
+        const linkId: string = data.id
+        const slug: string = data.slug
+
+        // Create tasks in parallel
+        if (activeTasks.length > 0) {
+          await Promise.all(
+            activeTasks.map(t =>
+              fetch(`/api/links/${linkId}/tasks`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                  type: t.type,
+                  label: t.label,
+                  target: t.link,
+                  required: true
+                })
+              })
+            )
+          )
+        }
+
+        const url = `${window.location.origin}/l/${slug}`
+        setShareUrl(url)
+        setShareOpen(true)
+        toast.success('Your link is ready!')
       } else {
         const errorData = await response.json();
         const errorMessage = errorData.error || 'Failed to create link';
@@ -73,6 +128,23 @@ export default function CreateLink() {
       [e.target.name]: e.target.value
     }));
   };
+
+  const isTaskActive = (type: TaskType) => activeTasks.some(t => t.type === type)
+
+  const toggleTask = (type: TaskType, checked: boolean) => {
+    setActiveTasks(prev => {
+      if (checked) {
+        if (prev.some(t => t.type === type)) return prev
+        const def = taskDefaults[type]
+        return [...prev, { type, label: def.defaultLabel, link: '' }]
+      }
+      return prev.filter(t => t.type !== type)
+    })
+  }
+
+  const updateTaskField = (type: TaskType, field: 'label' | 'link', value: string) => {
+    setActiveTasks(prev => prev.map(t => t.type === type ? { ...t, [field]: value } : t))
+  }
 
   if (loading) {
     return (
@@ -266,7 +338,7 @@ export default function CreateLink() {
                           disabled={isSubmitting}
                           className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
-                          {isSubmitting ? 'Creating...' : 'Create Link'}
+                          {isSubmitting ? 'Generating...' : 'Generate Link'}
                         </Button>
                       </div>
                     </form>
@@ -280,31 +352,146 @@ export default function CreateLink() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
-                        <input type="checkbox" className="rounded" />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">Follow on Instagram</div>
-                          <div className="text-xs text-slate-500">@yourusername</div>
-                        </div>
+                      {/* Telegram */}
+                      <div className="p-3 border border-slate-200 rounded-md">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={isTaskActive('telegram')}
+                            onChange={(e) => toggleTask('telegram', e.target.checked)}
+                          />
+                          <span className="font-medium text-sm">{taskDefaults.telegram.name}</span>
+                        </label>
+                        {isTaskActive('telegram') && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <Label htmlFor="task-telegram-label">Label</Label>
+                              <Input
+                                id="task-telegram-label"
+                                value={activeTasks.find(t => t.type === 'telegram')?.label || ''}
+                                onChange={(e) => updateTaskField('telegram', 'label', e.target.value)}
+                                placeholder={taskDefaults.telegram.defaultLabel}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="task-telegram-link">Link</Label>
+                              <Input
+                                id="task-telegram-link"
+                                value={activeTasks.find(t => t.type === 'telegram')?.link || ''}
+                                onChange={(e) => updateTaskField('telegram', 'link', e.target.value)}
+                                placeholder={taskDefaults.telegram.linkPlaceholder}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
-                        <input type="checkbox" className="rounded" />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">Subscribe to YouTube</div>
-                          <div className="text-xs text-slate-500">@yourchannel</div>
-                        </div>
+
+                      {/* Instagram */}
+                      <div className="p-3 border border-slate-200 rounded-md">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={isTaskActive('instagram')}
+                            onChange={(e) => toggleTask('instagram', e.target.checked)}
+                          />
+                          <span className="font-medium text-sm">{taskDefaults.instagram.name}</span>
+                        </label>
+                        {isTaskActive('instagram') && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <Label htmlFor="task-instagram-label">Label</Label>
+                              <Input
+                                id="task-instagram-label"
+                                value={activeTasks.find(t => t.type === 'instagram')?.label || ''}
+                                onChange={(e) => updateTaskField('instagram', 'label', e.target.value)}
+                                placeholder={taskDefaults.instagram.defaultLabel}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="task-instagram-link">Link</Label>
+                              <Input
+                                id="task-instagram-link"
+                                value={activeTasks.find(t => t.type === 'instagram')?.link || ''}
+                                onChange={(e) => updateTaskField('instagram', 'link', e.target.value)}
+                                placeholder={taskDefaults.instagram.linkPlaceholder}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-md">
-                        <input type="checkbox" className="rounded" />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">Join Telegram</div>
-                          <div className="text-xs text-slate-500">@yourgroup</div>
-                        </div>
+
+                      {/* YouTube */}
+                      <div className="p-3 border border-slate-200 rounded-md">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={isTaskActive('youtube')}
+                            onChange={(e) => toggleTask('youtube', e.target.checked)}
+                          />
+                          <span className="font-medium text-sm">{taskDefaults.youtube.name}</span>
+                        </label>
+                        {isTaskActive('youtube') && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <Label htmlFor="task-youtube-label">Label</Label>
+                              <Input
+                                id="task-youtube-label"
+                                value={activeTasks.find(t => t.type === 'youtube')?.label || ''}
+                                onChange={(e) => updateTaskField('youtube', 'label', e.target.value)}
+                                placeholder={taskDefaults.youtube.defaultLabel}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="task-youtube-link">Link</Label>
+                              <Input
+                                id="task-youtube-link"
+                                value={activeTasks.find(t => t.type === 'youtube')?.link || ''}
+                                onChange={(e) => updateTaskField('youtube', 'link', e.target.value)}
+                                placeholder={taskDefaults.youtube.linkPlaceholder}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Discord */}
+                      <div className="p-3 border border-slate-200 rounded-md">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={isTaskActive('discord')}
+                            onChange={(e) => toggleTask('discord', e.target.checked)}
+                          />
+                          <span className="font-medium text-sm">{taskDefaults.discord.name}</span>
+                        </label>
+                        {isTaskActive('discord') && (
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <Label htmlFor="task-discord-label">Label</Label>
+                              <Input
+                                id="task-discord-label"
+                                value={activeTasks.find(t => t.type === 'discord')?.label || ''}
+                                onChange={(e) => updateTaskField('discord', 'label', e.target.value)}
+                                placeholder={taskDefaults.discord.defaultLabel}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="task-discord-link">Link</Label>
+                              <Input
+                                id="task-discord-link"
+                                value={activeTasks.find(t => t.type === 'discord')?.link || ''}
+                                onChange={(e) => updateTaskField('discord', 'link', e.target.value)}
+                                placeholder={taskDefaults.discord.linkPlaceholder}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full mt-4">
-                      + Add Task
-                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -338,14 +525,16 @@ export default function CreateLink() {
                       <div className="space-y-2">
                         <div className="text-sm font-medium text-slate-700">Complete these tasks to unlock:</div>
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded">
-                            <div className="w-4 h-4 border border-slate-300 rounded"></div>
-                            <span className="text-sm">Follow on Instagram</span>
-                          </div>
-                          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded">
-                            <div className="w-4 h-4 border border-slate-300 rounded"></div>
-                            <span className="text-sm">Subscribe to YouTube</span>
-                          </div>
+                          {activeTasks.length === 0 ? (
+                            <div className="text-sm text-slate-500">No tasks selected yet.</div>
+                          ) : (
+                            activeTasks.map((t) => (
+                              <div key={t.type} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                                <div className="w-4 h-4 border border-slate-300 rounded"></div>
+                                <span className="text-sm">{t.label || taskDefaults[t.type].defaultLabel}</span>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
 
@@ -363,6 +552,22 @@ export default function CreateLink() {
           </div>
         </main>
       </div>
+      {/* Share modal */}
+      <Modal open={shareOpen} onClose={() => setShareOpen(false)} title={"Here's Your Link"} size='sm' footer={(
+        <Button onClick={() => setShareOpen(false)} className="bg-emerald-600 hover:bg-emerald-700 text-white">Close</Button>
+      )}>
+        <p className="text-sm text-slate-600 mb-3">Share this with your audience</p>
+        <div className="flex items-center gap-2">
+          <Input readOnly value={shareUrl} className="flex-1" />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={async () => { await navigator.clipboard.writeText(shareUrl); toast.success('Copied!') }}
+          >
+            Copy
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
