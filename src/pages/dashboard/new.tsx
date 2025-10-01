@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import Modal from '../../components/ui/Modal'
 import { useRouter } from 'next/router'
+import { DashboardLayout } from '../../components/layout/DashboardLayout'
 
 export default function CreateLink() {
   const { user, loading } = useUser();
@@ -148,409 +149,351 @@ export default function CreateLink() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex">
-        <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
-          <div className="p-4 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
-              <span className="font-semibold text-lg">Linksy</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
+      <DashboardLayout title="Create New Link">
+        <div className="flex items-center justify-center h-64">
           <div className="text-slate-500">Loading...</div>
         </div>
-      </div>
-    )
+      </DashboardLayout>
+    );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex">
-        <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
-          <div className="p-4 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
-              <span className="font-semibold text-lg">Linksy</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
+      <DashboardLayout title="Create New Link">
+        <div className="flex items-center justify-center h-64">
           <div className="text-slate-500">Please sign in to create a link.</div>
         </div>
-      </div>
-    )
+      </DashboardLayout>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-4 border-b border-slate-200">
-          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center text-white font-bold">⛓️</div>
-            <span className="font-semibold text-lg">Linksy</span>
-          </a>
-        </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <a href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
-            <span>📊</span>
-            Dashboard
-          </a>
-          <a href="/dashboard/new" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-md">
-            <span>➕</span>
-            Create Link
-          </a>
-          <a href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">
-            <span>🔗</span>
-            My Links
-          </a>
-        </nav>
-      </div>
+    <DashboardLayout title="Create New Link">
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Left Column - Form */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Link Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="destination">Destination URL *</Label>
+                    <Input
+                      type="url"
+                      id="destination"
+                      name="destination"
+                      value={formData.destination}
+                      onChange={handleChange}
+                      placeholder="https://example.com"
+                      required
+                    />
+                  </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b border-slate-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-900">Create New Link</h1>
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
-                {user.email?.charAt(0).toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </header>
+                  <div>
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="My Awesome Link"
+                    />
+                  </div>
 
-        {/* Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            <motion.div 
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* Left Column - Form */}
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Link Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="destination">Destination URL *</Label>
-                        <Input
-                          type="url"
-                          id="destination"
-                          name="destination"
-                          value={formData.destination}
-                          onChange={handleChange}
-                          placeholder="https://example.com"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                          type="text"
-                          id="title"
-                          name="title"
-                          value={formData.title}
-                          onChange={handleChange}
-                          placeholder="My Awesome Link"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="slug">Slug *</Label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-500">linksy.com/l/</span>
-                          <Input
-                            type="text"
-                            id="slug"
-                            name="slug"
-                            value={formData.slug}
-                            onChange={handleChange}
-                            placeholder="my-link"
-                            required
-                            className="flex-1"
-                          />
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Only letters, numbers, and hyphens allowed
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="brandColor">Brand Color</Label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            id="brandColor"
-                            name="brandColor"
-                            value={formData.brandColor}
-                            onChange={handleChange}
-                            className="w-12 h-10 border border-slate-300 rounded-md cursor-pointer"
-                          />
-                          <Input
-                            type="text"
-                            value={formData.brandColor}
-                            onChange={handleChange}
-                            name="brandColor"
-                            placeholder="#111827"
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="logoUrl">Logo URL</Label>
-                        <Input
-                          type="url"
-                          id="logoUrl"
-                          name="logoUrl"
-                          value={formData.logoUrl}
-                          onChange={handleChange}
-                          placeholder="https://example.com/logo.png"
-                        />
-                      </div>
-
-                      {error && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="flex gap-3 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => window.location.href = '/dashboard'}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          {isSubmitting ? 'Generating...' : 'Generate Link'}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-
-                {/* Tasks Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tasks</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {/* Telegram */}
-                      <div className="p-3 border border-slate-200 rounded-md">
-                        <label className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={isTaskActive('telegram')}
-                            onChange={(e) => toggleTask('telegram', e.target.checked)}
-                          />
-                          <span className="font-medium text-sm">{taskDefaults.telegram.name}</span>
-                        </label>
-                        {isTaskActive('telegram') && (
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <Label htmlFor="task-telegram-label">Label</Label>
-                              <Input
-                                id="task-telegram-label"
-                                value={activeTasks.find(t => t.type === 'telegram')?.label || ''}
-                                onChange={(e) => updateTaskField('telegram', 'label', e.target.value)}
-                                placeholder={taskDefaults.telegram.defaultLabel}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="task-telegram-link">Link</Label>
-                              <Input
-                                id="task-telegram-link"
-                                value={activeTasks.find(t => t.type === 'telegram')?.link || ''}
-                                onChange={(e) => updateTaskField('telegram', 'link', e.target.value)}
-                                placeholder={taskDefaults.telegram.linkPlaceholder}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Instagram */}
-                      <div className="p-3 border border-slate-200 rounded-md">
-                        <label className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={isTaskActive('instagram')}
-                            onChange={(e) => toggleTask('instagram', e.target.checked)}
-                          />
-                          <span className="font-medium text-sm">{taskDefaults.instagram.name}</span>
-                        </label>
-                        {isTaskActive('instagram') && (
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <Label htmlFor="task-instagram-label">Label</Label>
-                              <Input
-                                id="task-instagram-label"
-                                value={activeTasks.find(t => t.type === 'instagram')?.label || ''}
-                                onChange={(e) => updateTaskField('instagram', 'label', e.target.value)}
-                                placeholder={taskDefaults.instagram.defaultLabel}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="task-instagram-link">Link</Label>
-                              <Input
-                                id="task-instagram-link"
-                                value={activeTasks.find(t => t.type === 'instagram')?.link || ''}
-                                onChange={(e) => updateTaskField('instagram', 'link', e.target.value)}
-                                placeholder={taskDefaults.instagram.linkPlaceholder}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* YouTube */}
-                      <div className="p-3 border border-slate-200 rounded-md">
-                        <label className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={isTaskActive('youtube')}
-                            onChange={(e) => toggleTask('youtube', e.target.checked)}
-                          />
-                          <span className="font-medium text-sm">{taskDefaults.youtube.name}</span>
-                        </label>
-                        {isTaskActive('youtube') && (
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <Label htmlFor="task-youtube-label">Label</Label>
-                              <Input
-                                id="task-youtube-label"
-                                value={activeTasks.find(t => t.type === 'youtube')?.label || ''}
-                                onChange={(e) => updateTaskField('youtube', 'label', e.target.value)}
-                                placeholder={taskDefaults.youtube.defaultLabel}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="task-youtube-link">Link</Label>
-                              <Input
-                                id="task-youtube-link"
-                                value={activeTasks.find(t => t.type === 'youtube')?.link || ''}
-                                onChange={(e) => updateTaskField('youtube', 'link', e.target.value)}
-                                placeholder={taskDefaults.youtube.linkPlaceholder}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Discord */}
-                      <div className="p-3 border border-slate-200 rounded-md">
-                        <label className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={isTaskActive('discord')}
-                            onChange={(e) => toggleTask('discord', e.target.checked)}
-                          />
-                          <span className="font-medium text-sm">{taskDefaults.discord.name}</span>
-                        </label>
-                        {isTaskActive('discord') && (
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <Label htmlFor="task-discord-label">Label</Label>
-                              <Input
-                                id="task-discord-label"
-                                value={activeTasks.find(t => t.type === 'discord')?.label || ''}
-                                onChange={(e) => updateTaskField('discord', 'label', e.target.value)}
-                                placeholder={taskDefaults.discord.defaultLabel}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="task-discord-link">Link</Label>
-                              <Input
-                                id="task-discord-link"
-                                value={activeTasks.find(t => t.type === 'discord')?.link || ''}
-                                onChange={(e) => updateTaskField('discord', 'link', e.target.value)}
-                                placeholder={taskDefaults.discord.linkPlaceholder}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                  <div>
+                    <Label htmlFor="slug">Slug *</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-500">linksy.com/l/</span>
+                      <Input
+                        type="text"
+                        id="slug"
+                        name="slug"
+                        value={formData.slug}
+                        onChange={handleChange}
+                        placeholder="my-link"
+                        required
+                        className="flex-1"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Only letters, numbers, and hyphens allowed
+                    </p>
+                  </div>
 
-              {/* Right Column - Live Preview */}
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Live Preview</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
-                      {/* Preview Header */}
-                      <div className="flex items-center gap-3">
-                        {formData.logoUrl ? (
-                          <img src={formData.logoUrl} alt="Logo" className="w-8 h-8 rounded" />
-                        ) : (
-                          <div className="w-8 h-8 rounded bg-slate-200 flex items-center justify-center">
-                            <span className="text-xs">⛓️</span>
-                          </div>
-                        )}
+                  <div>
+                    <Label htmlFor="brandColor">Brand Color</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="brandColor"
+                        name="brandColor"
+                        value={formData.brandColor}
+                        onChange={handleChange}
+                        className="w-12 h-10 border border-slate-300 rounded-md cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={formData.brandColor}
+                        onChange={handleChange}
+                        name="brandColor"
+                        placeholder="#111827"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="logoUrl">Logo URL</Label>
+                    <Input
+                      type="url"
+                      id="logoUrl"
+                      name="logoUrl"
+                      value={formData.logoUrl}
+                      onChange={handleChange}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => window.location.href = '/dashboard'}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      {isSubmitting ? 'Generating...' : 'Generate Link'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Tasks Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Tasks</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* Telegram */}
+                  <div className="p-3 border border-slate-200 rounded-md">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        checked={isTaskActive('telegram')}
+                        onChange={(e) => toggleTask('telegram', e.target.checked)}
+                      />
+                      <span className="font-medium text-sm">{taskDefaults.telegram.name}</span>
+                    </label>
+                    {isTaskActive('telegram') && (
+                      <div className="mt-3 space-y-3">
                         <div>
-                          <h3 className="font-semibold" style={{ color: formData.brandColor }}>
-                            {formData.title || 'Untitled Link'}
-                          </h3>
-                          <p className="text-xs text-slate-500">linksy.com/l/{formData.slug || 'my-link'}</p>
+                          <Label htmlFor="task-telegram-label">Label</Label>
+                          <Input
+                            id="task-telegram-label"
+                            value={activeTasks.find(t => t.type === 'telegram')?.label || ''}
+                            onChange={(e) => updateTaskField('telegram', 'label', e.target.value)}
+                            placeholder={taskDefaults.telegram.defaultLabel}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="task-telegram-link">Link</Label>
+                          <Input
+                            id="task-telegram-link"
+                            value={activeTasks.find(t => t.type === 'telegram')?.link || ''}
+                            onChange={(e) => updateTaskField('telegram', 'link', e.target.value)}
+                            placeholder={taskDefaults.telegram.linkPlaceholder}
+                          />
                         </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Preview Tasks */}
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium text-slate-700">Complete these tasks to unlock:</div>
-                        <div className="space-y-2">
-                          {activeTasks.length === 0 ? (
-                            <div className="text-sm text-slate-500">No tasks selected yet.</div>
-                          ) : (
-                            activeTasks.map((t) => (
-                              <div key={t.type} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
-                                <div className="w-4 h-4 border border-slate-300 rounded"></div>
-                                <span className="text-sm">{t.label || taskDefaults[t.type].defaultLabel}</span>
-                              </div>
-                            ))
-                          )}
+                  {/* Instagram */}
+                  <div className="p-3 border border-slate-200 rounded-md">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        checked={isTaskActive('instagram')}
+                        onChange={(e) => toggleTask('instagram', e.target.checked)}
+                      />
+                      <span className="font-medium text-sm">{taskDefaults.instagram.name}</span>
+                    </label>
+                    {isTaskActive('instagram') && (
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <Label htmlFor="task-instagram-label">Label</Label>
+                          <Input
+                            id="task-instagram-label"
+                            value={activeTasks.find(t => t.type === 'instagram')?.label || ''}
+                            onChange={(e) => updateTaskField('instagram', 'label', e.target.value)}
+                            placeholder={taskDefaults.instagram.defaultLabel}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="task-instagram-link">Link</Label>
+                          <Input
+                            id="task-instagram-link"
+                            value={activeTasks.find(t => t.type === 'instagram')?.link || ''}
+                            onChange={(e) => updateTaskField('instagram', 'link', e.target.value)}
+                            placeholder={taskDefaults.instagram.linkPlaceholder}
+                          />
                         </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Preview Button */}
-                      <div className="pt-4">
-                        <div className="w-full h-10 bg-slate-200 rounded flex items-center justify-center text-sm text-slate-500">
-                          Complete tasks to unlock
+                  {/* YouTube */}
+                  <div className="p-3 border border-slate-200 rounded-md">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        checked={isTaskActive('youtube')}
+                        onChange={(e) => toggleTask('youtube', e.target.checked)}
+                      />
+                      <span className="font-medium text-sm">{taskDefaults.youtube.name}</span>
+                    </label>
+                    {isTaskActive('youtube') && (
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <Label htmlFor="task-youtube-label">Label</Label>
+                          <Input
+                            id="task-youtube-label"
+                            value={activeTasks.find(t => t.type === 'youtube')?.label || ''}
+                            onChange={(e) => updateTaskField('youtube', 'label', e.target.value)}
+                            placeholder={taskDefaults.youtube.defaultLabel}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="task-youtube-link">Link</Label>
+                          <Input
+                            id="task-youtube-link"
+                            value={activeTasks.find(t => t.type === 'youtube')?.link || ''}
+                            onChange={(e) => updateTaskField('youtube', 'link', e.target.value)}
+                            placeholder={taskDefaults.youtube.linkPlaceholder}
+                          />
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
+                    )}
+                  </div>
+
+                  {/* Discord */}
+                  <div className="p-3 border border-slate-200 rounded-md">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="rounded"
+                        checked={isTaskActive('discord')}
+                        onChange={(e) => toggleTask('discord', e.target.checked)}
+                      />
+                      <span className="font-medium text-sm">{taskDefaults.discord.name}</span>
+                    </label>
+                    {isTaskActive('discord') && (
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <Label htmlFor="task-discord-label">Label</Label>
+                          <Input
+                            id="task-discord-label"
+                            value={activeTasks.find(t => t.type === 'discord')?.label || ''}
+                            onChange={(e) => updateTaskField('discord', 'label', e.target.value)}
+                            placeholder={taskDefaults.discord.defaultLabel}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="task-discord-link">Link</Label>
+                          <Input
+                            id="task-discord-link"
+                            value={activeTasks.find(t => t.type === 'discord')?.link || ''}
+                            onChange={(e) => updateTaskField('discord', 'link', e.target.value)}
+                            placeholder={taskDefaults.discord.linkPlaceholder}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </main>
+
+          {/* Right Column - Live Preview */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+                  {/* Preview Header */}
+                  <div className="flex items-center gap-3">
+                    {formData.logoUrl ? (
+                      <img src={formData.logoUrl} alt="Logo" className="w-8 h-8 rounded" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-slate-200 flex items-center justify-center">
+                        <span className="text-xs">⛓️</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold" style={{ color: formData.brandColor }}>
+                        {formData.title || 'Untitled Link'}
+                      </h3>
+                      <p className="text-xs text-slate-500">linksy.com/l/{formData.slug || 'my-link'}</p>
+                    </div>
+                  </div>
+
+                  {/* Preview Tasks */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-slate-700">Complete these tasks to unlock:</div>
+                    <div className="space-y-2">
+                      {activeTasks.length === 0 ? (
+                        <div className="text-sm text-slate-500">No tasks selected yet.</div>
+                      ) : (
+                        activeTasks.map((t) => (
+                          <div key={t.type} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                            <div className="w-4 h-4 border border-slate-300 rounded"></div>
+                            <span className="text-sm">{t.label || taskDefaults[t.type].defaultLabel}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Preview Button */}
+                  <div className="pt-4">
+                    <div className="w-full h-10 bg-slate-200 rounded flex items-center justify-center text-sm text-slate-500">
+                      Complete tasks to unlock
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
       </div>
       {/* Share modal */}
       <Modal open={shareOpen} onClose={() => setShareOpen(false)} title={"Here's Your Link"} size='sm' footer={(
@@ -568,6 +511,6 @@ export default function CreateLink() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </DashboardLayout>
   )
 }

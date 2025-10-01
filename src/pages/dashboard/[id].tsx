@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { TaskList } from '../../components/TaskList';
 import { AnalyticsPanel } from '../../components/AnalyticsPanel';
 import { supabase } from '../../lib/supabaseClient';
+import { DashboardLayout } from '../../components/layout/DashboardLayout';
 
 interface Link {
   id: string;
@@ -121,233 +122,191 @@ export default function LinkEditor({ linkId }: Props) {
 
   if (loading || linkLoading) {
     return (
-      <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
-        <h1>Link Editor</h1>
-        <p>Loading...</p>
-      </main>
+      <DashboardLayout title="Edit Link">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-slate-500">Loading...</div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!user) {
     return (
-      <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
-        <h1>Link Editor</h1>
-        <p>Please sign in to edit links.</p>
-        <p>Redirecting to home page...</p>
-      </main>
+      <DashboardLayout title="Edit Link">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-slate-500">Please sign in to edit links.</div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!link) {
     return (
-      <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
-        <h1>Link Editor</h1>
-        <p>Link not found.</p>
-      </main>
+      <DashboardLayout title="Edit Link">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-slate-500">Link not found.</div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 16px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1>Edit Link</h1>
-        <p style={{ color: '#6b7280' }}>
-          Edit your link settings and manage tasks.
-        </p>
-      </div>
+    <DashboardLayout title="Edit Link">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h2 className="text-lg font-medium text-slate-900 mb-2">Edit Link</h2>
+          <p className="text-slate-600">
+            Edit your link settings and manage tasks.
+          </p>
+        </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-        {/* Link Settings */}
-        <div>
-          <h2 style={{ marginBottom: '20px' }}>Link Settings</h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                Slug
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#6b7280' }}>linksy.com/l/</span>
-                <code style={{ 
-                  backgroundColor: '#f3f4f6', 
-                  padding: '8px 12px', 
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}>
-                  {link.slug}
-                </code>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Link Settings */}
+          <div>
+            <h3 className="text-lg font-medium text-slate-900 mb-6">Link Settings</h3>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Slug
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500">linksy.com/l/</span>
+                  <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">
+                    {link.slug}
+                  </code>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Slug cannot be changed after creation
+                </p>
               </div>
-              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
-                Slug cannot be changed after creation
-              </p>
-            </div>
 
-            <div>
-              <label htmlFor="title" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="My Awesome Link"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="destination" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                Destination URL
-              </label>
-              <input
-                type="url"
-                id="destination"
-                name="destination"
-                value={formData.destination}
-                onChange={handleChange}
-                placeholder="https://example.com"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="brandColor" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                Brand Color
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input
-                  type="color"
-                  id="brandColor"
-                  name="brandColor"
-                  value={formData.brandColor}
-                  onChange={handleChange}
-                  style={{
-                    width: '50px',
-                    height: '40px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                />
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-2">
+                  Title
+                </label>
                 <input
                   type="text"
-                  value={formData.brandColor}
+                  id="title"
+                  name="title"
+                  value={formData.title}
                   onChange={handleChange}
-                  name="brandColor"
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '16px'
-                  }}
+                  placeholder="My Awesome Link"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="logoUrl" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                Logo URL
-              </label>
-              <input
-                type="url"
-                id="logoUrl"
-                name="logoUrl"
-                value={formData.logoUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/logo.png"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
-
-            {error && (
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '6px',
-                color: '#dc2626'
-              }}>
-                {error}
+              <div>
+                <label htmlFor="destination" className="block text-sm font-medium text-slate-700 mb-2">
+                  Destination URL
+                </label>
+                <input
+                  type="url"
+                  id="destination"
+                  name="destination"
+                  value={formData.destination}
+                  onChange={handleChange}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
               </div>
-            )}
 
-            {success && (
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '6px',
-                color: '#166534'
-              }}>
-                {success}
+              <div>
+                <label htmlFor="brandColor" className="block text-sm font-medium text-slate-700 mb-2">
+                  Brand Color
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    id="brandColor"
+                    name="brandColor"
+                    value={formData.brandColor}
+                    onChange={handleChange}
+                    className="w-12 h-10 border border-slate-300 rounded-md cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={formData.brandColor}
+                    onChange={handleChange}
+                    name="brandColor"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
               </div>
-            )}
 
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
+              <div>
+                <label htmlFor="logoUrl" className="block text-sm font-medium text-slate-700 mb-2">
+                  Logo URL
+                </label>
+                <input
+                  type="url"
+                  id="logoUrl"
+                  name="logoUrl"
+                  value={formData.logoUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/logo.png"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm">
+                  {success}
+                </div>
+              )}
+
+              <Button onClick={handleSave} disabled={isSaving} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Tasks Section */}
+          <div>
+            <TaskList 
+              linkId={linkId}
+              tasks={link.tasks}
+              onTaskAdded={(task) => setLink(prev => prev ? { ...prev, tasks: [...prev.tasks, task] } : null)}
+              onTaskUpdated={(updatedTask) => setLink(prev => prev ? { 
+                ...prev, 
+                tasks: prev.tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+              } : null)}
+              onTaskDeleted={(taskId) => setLink(prev => prev ? { 
+                ...prev, 
+                tasks: prev.tasks.filter(t => t.id !== taskId)
+              } : null)}
+            />
+
+            <div className="mt-8 p-6 bg-slate-50 rounded-lg">
+              <h3 className="text-lg font-medium text-slate-900 mb-3">Preview</h3>
+              <p className="text-sm text-slate-600 mb-4">
+                Public URL: <a href={`/l/${link.slug}`} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
+                  linksy.com/l/{link.slug}
+                </a>
+              </p>
+              <Button 
+                variant="outline"
+                onClick={() => window.open(`/l/${link.slug}`, '_blank')}
+                className="w-full"
+              >
+                View Public Page
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Tasks Section */}
-        <div>
-          <TaskList 
-            linkId={linkId}
-            tasks={link.tasks}
-            onTaskAdded={(task) => setLink(prev => prev ? { ...prev, tasks: [...prev.tasks, task] } : null)}
-            onTaskUpdated={(updatedTask) => setLink(prev => prev ? { 
-              ...prev, 
-              tasks: prev.tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
-            } : null)}
-            onTaskDeleted={(taskId) => setLink(prev => prev ? { 
-              ...prev, 
-              tasks: prev.tasks.filter(t => t.id !== taskId)
-            } : null)}
-          />
-
-          <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
-            <h3 style={{ margin: '0 0 12px 0' }}>Preview</h3>
-            <p style={{ margin: '0 0 12px 0', color: '#6b7280' }}>
-              Public URL: <a href={`/l/${link.slug}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
-                linksy.com/l/{link.slug}
-              </a>
-            </p>
-            <Button 
-              variant="secondary"
-              onClick={() => window.open(`/l/${link.slug}`, '_blank')}
-            >
-              View Public Page
-            </Button>
-          </div>
+        {/* Analytics Section */}
+        <div className="mt-12">
+          <AnalyticsPanel linkId={linkId} />
         </div>
       </div>
-
-      {/* Analytics Section */}
-      <div style={{ marginTop: '48px' }}>
-        <AnalyticsPanel linkId={linkId} />
-      </div>
-    </main>
+    </DashboardLayout>
   );
 }
 
